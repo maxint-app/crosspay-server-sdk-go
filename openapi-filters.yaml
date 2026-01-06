@@ -1,0 +1,6 @@
+inverseTags: 
+  - Tenant
+  - Tenant Server
+unusedComponents:
+  - schemas
+  - parameters
