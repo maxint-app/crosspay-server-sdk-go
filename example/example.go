@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	crosspay "crosspay-server-sdk-go/src"
+	crosspay "crosspay-server-sdk-go"
 )
 
 func main() {

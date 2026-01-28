@@ -15,7 +15,7 @@ import (
 	"net/http"
 	"time"
 
-	generated "crosspay-server-sdk-go/src/generated"
+	generated "crosspay-server-sdk-go/generated"
 )
 
 // CrosspayServerClient is a high-level client for the Crosspay API

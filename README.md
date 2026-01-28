@@ -5,7 +5,7 @@ A Go client library for the Crosspay API, providing easy access to subscription 
 ## Installation
 
 ```bash
-go get crosspay-server-sdk-go
+go get github.com/maxint-app/crosspay-server-sdk-go
 ```
 
 ## Usage
@@ -15,7 +15,7 @@ go get crosspay-server-sdk-go
 ```go
 import (
     "context"
-    crosspay "crosspay-server-sdk-go/src"
+    crosspay "github.com/maxint-app/crosspay-server-sdk-go/src"
 )
 
 client, err := crosspay.NewCrosspayServerClient("your_api_key_here")
