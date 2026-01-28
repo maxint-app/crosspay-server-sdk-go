@@ -1,4 +1,4 @@
-module crosspay-server-sdk-go
+module github.com/maxint-app/crosspay-server-sdk-go
 
 go 1.25.3
 
