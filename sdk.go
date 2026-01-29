@@ -158,7 +158,7 @@ func (c *CrosspayServerClient) GetActiveProduct(ctx context.Context, customerEma
 	}
 
 	for _, product := range products {
-		if product.Id == activeSubscription.ProductId {
+		if product.ProductId == activeSubscription.ProductId {
 			return &product, nil
 		}
 	}
