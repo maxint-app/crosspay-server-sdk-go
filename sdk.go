@@ -16,11 +16,24 @@ import (
 	"time"
 )
 
+func ptr[T any](v T) *T {
+	return &v
+}
+
 // CrosspayServerClient is a high-level client for the Crosspay API
 type CrosspayServerClient struct {
 	client *Client
 	apiKey string
 }
+
+type Environment string
+
+const (
+	// EnvironmentProduction is the production environment
+	EnvironmentProduction Environment = "prod"
+	// EnvironmentSandbox is the sandbox environment
+	EnvironmentSandbox Environment = "sandbox"
+)
 
 // NewCrosspayServerClient creates a new Crosspay server client
 func NewCrosspayServerClient(apiKey string, baseURL ...string) (*CrosspayServerClient, error) {
@@ -77,8 +90,8 @@ func (c *CrosspayServerClient) ListProducts(ctx context.Context) ([]TenantProduc
 }
 
 // ListEntitlements retrieves all tenant entitlements for the specified environment
-func (c *CrosspayServerClient) ListEntitlements(ctx context.Context, environment string) ([]TenantEntitlement, error) {
-	resp, err := c.client.GetTenantEntitlementsByEnvironment(ctx, environment)
+func (c *CrosspayServerClient) ListEntitlements(ctx context.Context, environment Environment) ([]TenantEntitlement, error) {
+	resp, err := c.client.GetTenantEntitlementsByEnvironment(ctx, string(environment))
 	if err != nil {
 		return nil, err
 	}
@@ -110,9 +123,10 @@ func (c *CrosspayServerClient) ListEntitlements(ctx context.Context, environment
 }
 
 // GetActiveSubscription retrieves the active subscription for a customer
-func (c *CrosspayServerClient) GetActiveSubscription(ctx context.Context, customerEmail string) (*StorableSubscription, error) {
+func (c *CrosspayServerClient) GetActiveSubscription(ctx context.Context, customerEmail string, environment Environment) (*StorableSubscription, error) {
 	body := TenantActiveSubscriptionInputBody{
 		CustomerEmail: customerEmail,
+		Environment:   ptr(string(environment)),
 	}
 
 	resp, err := c.client.PostTenantSubscriptionsActive(ctx, body)
@@ -143,8 +157,8 @@ func (c *CrosspayServerClient) GetActiveSubscription(ctx context.Context, custom
 }
 
 // GetActiveProduct retrieves the active product for a customer
-func (c *CrosspayServerClient) GetActiveProduct(ctx context.Context, customerEmail string) (*TenantProduct, error) {
-	activeSubscription, err := c.GetActiveSubscription(ctx, customerEmail)
+func (c *CrosspayServerClient) GetActiveProduct(ctx context.Context, customerEmail string, environment Environment) (*TenantProduct, error) {
+	activeSubscription, err := c.GetActiveSubscription(ctx, customerEmail, environment)
 	if err != nil {
 		return nil, err
 	}
@@ -167,8 +181,8 @@ func (c *CrosspayServerClient) GetActiveProduct(ctx context.Context, customerEma
 }
 
 // GetActiveEntitlement retrieves the active entitlement for a customer
-func (c *CrosspayServerClient) GetActiveEntitlement(ctx context.Context, customerEmail, environment string) (*TenantEntitlement, error) {
-	activeProduct, err := c.GetActiveProduct(ctx, customerEmail)
+func (c *CrosspayServerClient) GetActiveEntitlement(ctx context.Context, customerEmail string, environment Environment) (*TenantEntitlement, error) {
+	activeProduct, err := c.GetActiveProduct(ctx, customerEmail, environment)
 	if err != nil {
 		return nil, err
 	}
@@ -225,9 +239,10 @@ func (c *CrosspayServerClient) ListCustomers(ctx context.Context, limit *int64, 
 }
 
 // GetCustomerInfo retrieves extended customer information
-func (c *CrosspayServerClient) GetCustomerInfo(ctx context.Context, customerEmail string) (*GetCustomerExtendedInfoByEmailRow, error) {
+func (c *CrosspayServerClient) GetCustomerInfo(ctx context.Context, customerEmail string, environment Environment) (*GetCustomerExtendedInfoByEmailRow, error) {
 	body := TenantServerGetCustomerInputBody{
 		CustomerEmail: customerEmail,
+		Environment:   ptr(string(environment)),
 	}
 
 	resp, err := c.client.PostTenantServerCustomer(ctx, body)

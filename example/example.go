@@ -26,7 +26,7 @@ func main() {
 	}
 
 	// List entitlements for production environment
-	entitlements, err := client.ListEntitlements(ctx, "production")
+	entitlements, err := client.ListEntitlements(ctx, crosspay.EnvironmentProduction)
 	if err != nil {
 		log.Printf("Error listing entitlements: %v", err)
 	} else {
@@ -34,7 +34,7 @@ func main() {
 	}
 
 	// Get active subscription for a customer
-	activeSubscription, err := client.GetActiveSubscription(ctx, "customer_email@example.com")
+	activeSubscription, err := client.GetActiveSubscription(ctx, "customer_email@example.com", crosspay.EnvironmentSandbox)
 	if err != nil {
 		log.Printf("Error getting active subscription: %v", err)
 	} else {
@@ -42,7 +42,7 @@ func main() {
 	}
 
 	// Get active product for a customer
-	activeProduct, err := client.GetActiveProduct(ctx, "customer_email@example.com")
+	activeProduct, err := client.GetActiveProduct(ctx, "customer_email@example.com", crosspay.EnvironmentSandbox)
 	if err != nil {
 		log.Printf("Error getting active product: %v", err)
 	} else {
@@ -50,7 +50,7 @@ func main() {
 	}
 
 	// Get active entitlement for a customer
-	activeEntitlement, err := client.GetActiveEntitlement(ctx, "customer_email@example.com", "sandbox")
+	activeEntitlement, err := client.GetActiveEntitlement(ctx, "customer_email@example.com", crosspay.EnvironmentSandbox)
 	if err != nil {
 		log.Printf("Error getting active entitlement: %v", err)
 	} else {
@@ -58,7 +58,7 @@ func main() {
 	}
 
 	// Get customer info
-	customerInfo, err := client.GetCustomerInfo(ctx, "customer_email@example.com")
+	customerInfo, err := client.GetCustomerInfo(ctx, "customer_email@example.com", crosspay.EnvironmentSandbox)
 	if err != nil {
 		log.Printf("Error getting customer info: %v", err)
 	} else {
