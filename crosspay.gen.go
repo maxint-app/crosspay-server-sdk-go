@@ -124,6 +124,20 @@ type PurchaseItem struct {
 	Store           string `json:"store"`
 }
 
+// StorableEntitlement defines model for StorableEntitlement.
+type StorableEntitlement struct {
+	EntitlementId   string  `json:"entitlement_id"`
+	EntitlementType string  `json:"entitlement_type"`
+	ExpiresAt       int64   `json:"expires_at"`
+	Id              string  `json:"id"`
+	ProductId       string  `json:"product_id"`
+	PurchaseState   *string `json:"purchase_state,omitempty"`
+	RenewalStatus   string  `json:"renewal_status"`
+	Status          string  `json:"status"`
+	Store           string  `json:"store"`
+	TrialExpiresAt  *int64  `json:"trial_expires_at"`
+}
+
 // StorableSubscription defines model for StorableSubscription.
 type StorableSubscription struct {
 	EntitlementId  string `json:"entitlement_id"`
@@ -175,6 +189,18 @@ type SubscriptionStripeProduct struct {
 	UnitLabel           *string                 `json:"unit_label,omitempty"`
 	Updated             int64                   `json:"updated"`
 	Url                 *string                 `json:"url,omitempty"`
+}
+
+// TenantActiveEntitlementsInputBody defines model for TenantActiveEntitlementsInputBody.
+type TenantActiveEntitlementsInputBody struct {
+	CustomerEmail string  `json:"customer_email"`
+	Environment   *string `json:"environment"`
+}
+
+// TenantActiveEntitlementsResponseBody defines model for TenantActiveEntitlementsResponseBody.
+type TenantActiveEntitlementsResponseBody struct {
+	Data  *[]StorableEntitlement `json:"data,omitempty"`
+	Error *string                `json:"error,omitempty"`
 }
 
 // TenantActiveSubscriptionInputBody defines model for TenantActiveSubscriptionInputBody.
@@ -357,6 +383,9 @@ type PostTenantServerGocardlessCancelByEnvironmentJSONRequestBody = TenantCancel
 // PostTenantServerStripeCancelByEnvironmentJSONRequestBody defines body for PostTenantServerStripeCancelByEnvironment for application/json ContentType.
 type PostTenantServerStripeCancelByEnvironmentJSONRequestBody = TenantCancelStripeSubscriptionInputBody
 
+// PostTenantEntitlementsActiveJSONRequestBody defines body for PostTenantEntitlementsActive for application/json ContentType.
+type PostTenantEntitlementsActiveJSONRequestBody = TenantActiveEntitlementsInputBody
+
 // PostTenantGocardlessBillingRequestFlowByEnvironmentJSONRequestBody defines body for PostTenantGocardlessBillingRequestFlowByEnvironment for application/json ContentType.
 type PostTenantGocardlessBillingRequestFlowByEnvironmentJSONRequestBody = TenantGoCardlessBillingRequestFlowInputBody
 
@@ -464,6 +493,11 @@ type ClientInterface interface {
 	PostTenantServerStripeCancelByEnvironmentWithBody(ctx context.Context, environment string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PostTenantServerStripeCancelByEnvironment(ctx context.Context, environment string, body PostTenantServerStripeCancelByEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostTenantEntitlementsActiveWithBody request with any body
+	PostTenantEntitlementsActiveWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostTenantEntitlementsActive(ctx context.Context, body PostTenantEntitlementsActiveJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetTenantEntitlementsByEnvironment request
 	GetTenantEntitlementsByEnvironment(ctx context.Context, environment string, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -593,6 +627,30 @@ func (c *Client) PostTenantServerStripeCancelByEnvironmentWithBody(ctx context.C
 
 func (c *Client) PostTenantServerStripeCancelByEnvironment(ctx context.Context, environment string, body PostTenantServerStripeCancelByEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostTenantServerStripeCancelByEnvironmentRequest(c.Server, environment, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostTenantEntitlementsActiveWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostTenantEntitlementsActiveRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostTenantEntitlementsActive(ctx context.Context, body PostTenantEntitlementsActiveJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostTenantEntitlementsActiveRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -981,6 +1039,46 @@ func NewPostTenantServerStripeCancelByEnvironmentRequestWithBody(server string, 
 	return req, nil
 }
 
+// NewPostTenantEntitlementsActiveRequest calls the generic PostTenantEntitlementsActive builder with application/json body
+func NewPostTenantEntitlementsActiveRequest(server string, body PostTenantEntitlementsActiveJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostTenantEntitlementsActiveRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostTenantEntitlementsActiveRequestWithBody generates requests for PostTenantEntitlementsActive with any type of body
+func NewPostTenantEntitlementsActiveRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/tenant/entitlements/active")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewGetTenantEntitlementsByEnvironmentRequest generates requests for GetTenantEntitlementsByEnvironment
 func NewGetTenantEntitlementsByEnvironmentRequest(server string, environment string) (*http.Request, error) {
 	var err error
@@ -1331,6 +1429,11 @@ type ClientWithResponsesInterface interface {
 
 	PostTenantServerStripeCancelByEnvironmentWithResponse(ctx context.Context, environment string, body PostTenantServerStripeCancelByEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTenantServerStripeCancelByEnvironmentResponse, error)
 
+	// PostTenantEntitlementsActiveWithBodyWithResponse request with any body
+	PostTenantEntitlementsActiveWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTenantEntitlementsActiveResponse, error)
+
+	PostTenantEntitlementsActiveWithResponse(ctx context.Context, body PostTenantEntitlementsActiveJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTenantEntitlementsActiveResponse, error)
+
 	// GetTenantEntitlementsByEnvironmentWithResponse request
 	GetTenantEntitlementsByEnvironmentWithResponse(ctx context.Context, environment string, reqEditors ...RequestEditorFn) (*GetTenantEntitlementsByEnvironmentResponse, error)
 
@@ -1470,6 +1573,29 @@ func (r PostTenantServerStripeCancelByEnvironmentResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r PostTenantServerStripeCancelByEnvironmentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostTenantEntitlementsActiveResponse struct {
+	Body                          []byte
+	HTTPResponse                  *http.Response
+	JSON200                       *TenantActiveEntitlementsResponseBody
+	ApplicationproblemJSONDefault *ErrorModel
+}
+
+// Status returns HTTPResponse.Status
+func (r PostTenantEntitlementsActiveResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostTenantEntitlementsActiveResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -1712,6 +1838,23 @@ func (c *ClientWithResponses) PostTenantServerStripeCancelByEnvironmentWithRespo
 		return nil, err
 	}
 	return ParsePostTenantServerStripeCancelByEnvironmentResponse(rsp)
+}
+
+// PostTenantEntitlementsActiveWithBodyWithResponse request with arbitrary body returning *PostTenantEntitlementsActiveResponse
+func (c *ClientWithResponses) PostTenantEntitlementsActiveWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTenantEntitlementsActiveResponse, error) {
+	rsp, err := c.PostTenantEntitlementsActiveWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostTenantEntitlementsActiveResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostTenantEntitlementsActiveWithResponse(ctx context.Context, body PostTenantEntitlementsActiveJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTenantEntitlementsActiveResponse, error) {
+	rsp, err := c.PostTenantEntitlementsActive(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostTenantEntitlementsActiveResponse(rsp)
 }
 
 // GetTenantEntitlementsByEnvironmentWithResponse request returning *GetTenantEntitlementsByEnvironmentResponse
@@ -1957,6 +2100,39 @@ func ParsePostTenantServerStripeCancelByEnvironmentResponse(rsp *http.Response) 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest TenantCancelStripeSubscriptionResponseBody
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorModel
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostTenantEntitlementsActiveResponse parses an HTTP response from a PostTenantEntitlementsActiveWithResponse call
+func ParsePostTenantEntitlementsActiveResponse(rsp *http.Response) (*PostTenantEntitlementsActiveResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostTenantEntitlementsActiveResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TenantActiveEntitlementsResponseBody
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
