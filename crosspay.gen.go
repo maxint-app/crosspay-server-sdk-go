@@ -16,6 +16,55 @@ import (
 	"github.com/oapi-codegen/runtime"
 )
 
+// Defines values for TenantEntitlementEntitlementType.
+const (
+	Consumable    TenantEntitlementEntitlementType = "consumable"
+	NonConsumable TenantEntitlementEntitlementType = "non_consumable"
+	Subscription  TenantEntitlementEntitlementType = "subscription"
+)
+
+// Valid indicates whether the value is a known member of the TenantEntitlementEntitlementType enum.
+func (e TenantEntitlementEntitlementType) Valid() bool {
+	switch e {
+	case Consumable:
+		return true
+	case NonConsumable:
+		return true
+	case Subscription:
+		return true
+	default:
+		return false
+	}
+}
+
+// CustomerEntitlement defines model for CustomerEntitlement.
+type CustomerEntitlement struct {
+	Name string `json:"name"`
+}
+
+// CustomerEntitlements defines model for CustomerEntitlements.
+type CustomerEntitlements struct {
+	CustomerId    string              `json:"customer_id"`
+	Email         string              `json:"email"`
+	Purchases     *[]PurchaseItem     `json:"purchases"`
+	Subscriptions *[]SubscriptionItem `json:"subscriptions"`
+}
+
+// CustomerListItem defines model for CustomerListItem.
+type CustomerListItem struct {
+	CustomerId   string                 `json:"customer_id"`
+	Email        string                 `json:"email"`
+	Entitlements *[]CustomerEntitlement `json:"entitlements"`
+	Products     *[]CustomerProduct     `json:"products"`
+	Status       string                 `json:"status"`
+}
+
+// CustomerProduct defines model for CustomerProduct.
+type CustomerProduct struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
 // ErrorDetail defines model for ErrorDetail.
 type ErrorDetail struct {
 	// Location Where the error occurred, e.g. 'body.items[3].tags' or 'path.thing-id'
@@ -49,44 +98,35 @@ type ErrorModel struct {
 	Type *string `json:"type,omitempty"`
 }
 
-// GetCustomerExtendedInfoByEmailRow defines model for GetCustomerExtendedInfoByEmailRow.
-type GetCustomerExtendedInfoByEmailRow struct {
-	Email           string  `json:"email"`
-	EmailSha256Sum  *string `json:"email_sha256_sum"`
-	EntitlementName *string `json:"entitlement_name"`
-	Id              string  `json:"id"`
-	ProductId       *string `json:"product_id"`
-	ProductName     *string `json:"product_name"`
-	Status          *string `json:"status"`
-	Store           *string `json:"store"`
-}
-
 // ListCustomerResponseBody defines model for ListCustomerResponseBody.
 type ListCustomerResponseBody struct {
 	Data  PaginatedCustomers `json:"data"`
 	Error *string            `json:"error,omitempty"`
 }
 
-// ListCustomersByAppIDAndOrgIDPaginatedRow defines model for ListCustomersByAppIDAndOrgIDPaginatedRow.
-type ListCustomersByAppIDAndOrgIDPaginatedRow struct {
-	Email           string  `json:"email"`
-	EntitlementName *string `json:"entitlement_name"`
-	Id              string  `json:"id"`
-	ProductId       *string `json:"product_id"`
-	ProductName     *string `json:"product_name"`
-	Store           *string `json:"store"`
-}
-
 // PaginatedCustomers defines model for PaginatedCustomers.
 type PaginatedCustomers struct {
-	Customers  *[]ListCustomersByAppIDAndOrgIDPaginatedRow `json:"customers"`
-	Limit      int64                                       `json:"limit"`
-	NextCursor *string                                     `json:"next_cursor,omitempty"`
-	Total      *int64                                      `json:"total,omitempty"`
+	Customers  *[]CustomerListItem `json:"customers"`
+	Limit      int64               `json:"limit"`
+	NextCursor *string             `json:"next_cursor,omitempty"`
+	Total      *int64              `json:"total,omitempty"`
+}
+
+// PurchaseItem defines model for PurchaseItem.
+type PurchaseItem struct {
+	EntitlementId   string `json:"entitlement_id"`
+	EntitlementName string `json:"entitlement_name"`
+	EntitlementType string `json:"entitlement_type"`
+	ProductId       string `json:"product_id"`
+	ProductName     string `json:"product_name"`
+	PurchaseState   string `json:"purchase_state"`
+	Status          string `json:"status"`
+	Store           string `json:"store"`
 }
 
 // StorableSubscription defines model for StorableSubscription.
 type StorableSubscription struct {
+	EntitlementId  string `json:"entitlement_id"`
 	ExpiresAt      int64  `json:"expires_at"`
 	Id             string `json:"id"`
 	ProductId      string `json:"product_id"`
@@ -96,14 +136,15 @@ type StorableSubscription struct {
 	TrialExpiresAt *int64 `json:"trial_expires_at"`
 }
 
-// SubscriptionGocardlessProduct defines model for SubscriptionGocardlessProduct.
-type SubscriptionGocardlessProduct struct {
-	Currency       string  `json:"currency"`
-	Description    *string `json:"description,omitempty"`
-	FormattedPrice string  `json:"formatted_price"`
-	Id             string  `json:"id"`
-	Name           string  `json:"name"`
-	Price          int32   `json:"price"`
+// SubscriptionItem defines model for SubscriptionItem.
+type SubscriptionItem struct {
+	EntitlementId   string `json:"entitlement_id"`
+	EntitlementName string `json:"entitlement_name"`
+	EntitlementType string `json:"entitlement_type"`
+	ProductId       string `json:"product_id"`
+	ProductName     string `json:"product_name"`
+	Status          string `json:"status"`
+	Store           string `json:"store"`
 }
 
 // SubscriptionStripePrice defines model for SubscriptionStripePrice.
@@ -144,13 +185,14 @@ type TenantActiveSubscriptionInputBody struct {
 
 // TenantActiveSubscriptionResponseBody defines model for TenantActiveSubscriptionResponseBody.
 type TenantActiveSubscriptionResponseBody struct {
-	Data  *StorableSubscription `json:"data,omitempty"`
-	Error *string               `json:"error,omitempty"`
+	Data  *[]StorableSubscription `json:"data,omitempty"`
+	Error *string                 `json:"error,omitempty"`
 }
 
 // TenantCancelGoCardlessSubscriptionInputBody defines model for TenantCancelGoCardlessSubscriptionInputBody.
 type TenantCancelGoCardlessSubscriptionInputBody struct {
 	CustomerEmail string `json:"customer_email"`
+	EntitlementId string `json:"entitlement_id"`
 }
 
 // TenantCancelGoCardlessSubscriptionResponseBody defines model for TenantCancelGoCardlessSubscriptionResponseBody.
@@ -161,6 +203,7 @@ type TenantCancelGoCardlessSubscriptionResponseBody struct {
 // TenantCancelStripeSubscriptionInputBody defines model for TenantCancelStripeSubscriptionInputBody.
 type TenantCancelStripeSubscriptionInputBody struct {
 	CustomerEmail string `json:"customer_email"`
+	EntitlementId string `json:"entitlement_id"`
 }
 
 // TenantCancelStripeSubscriptionResponseBody defines model for TenantCancelStripeSubscriptionResponseBody.
@@ -170,13 +213,17 @@ type TenantCancelStripeSubscriptionResponseBody struct {
 
 // TenantEntitlement defines model for TenantEntitlement.
 type TenantEntitlement struct {
-	Description *string        `json:"description"`
-	Id          string         `json:"id"`
-	Metadata    []byte         `json:"metadata"`
-	Name        string         `json:"name"`
-	PeriodMs    int64          `json:"period_ms"`
-	Products    TenantProducts `json:"products"`
+	Description     *string                          `json:"description"`
+	EntitlementType TenantEntitlementEntitlementType `json:"entitlement_type"`
+	Id              string                           `json:"id"`
+	Metadata        []byte                           `json:"metadata"`
+	Name            string                           `json:"name"`
+	PeriodMs        int64                            `json:"period_ms"`
+	Products        TenantProducts                   `json:"products"`
 }
+
+// TenantEntitlementEntitlementType defines model for TenantEntitlement.EntitlementType.
+type TenantEntitlementEntitlementType string
 
 // TenantEntitlementProduct defines model for TenantEntitlementProduct.
 type TenantEntitlementProduct struct {
@@ -218,12 +265,6 @@ type TenantListEntitlementsResponseBody struct {
 	Error *string              `json:"error,omitempty"`
 }
 
-// TenantListGocardlessProductsResponseBody defines model for TenantListGocardlessProductsResponseBody.
-type TenantListGocardlessProductsResponseBody struct {
-	Data  *[]SubscriptionGocardlessProduct `json:"data"`
-	Error *string                          `json:"error,omitempty"`
-}
-
 // TenantListProductsResponseBody defines model for TenantListProductsResponseBody.
 type TenantListProductsResponseBody struct {
 	Data  *[]TenantProduct `json:"data"`
@@ -255,6 +296,18 @@ type TenantProducts struct {
 	Stripe     TenantEntitlementProduct `json:"stripe"`
 }
 
+// TenantServerConsumePurchaseInputBody defines model for TenantServerConsumePurchaseInputBody.
+type TenantServerConsumePurchaseInputBody struct {
+	CustomerEmail string `json:"customer_email"`
+	ProductId     string `json:"product_id"`
+}
+
+// TenantServerConsumePurchaseResponseBody defines model for TenantServerConsumePurchaseResponseBody.
+type TenantServerConsumePurchaseResponseBody struct {
+	Error   *string `json:"error,omitempty"`
+	Message *string `json:"message,omitempty"`
+}
+
 // TenantServerGetCustomerInputBody defines model for TenantServerGetCustomerInputBody.
 type TenantServerGetCustomerInputBody struct {
 	CustomerEmail string  `json:"customer_email"`
@@ -263,8 +316,8 @@ type TenantServerGetCustomerInputBody struct {
 
 // TenantServerGetCustomerResponseBody defines model for TenantServerGetCustomerResponseBody.
 type TenantServerGetCustomerResponseBody struct {
-	Data  *GetCustomerExtendedInfoByEmailRow `json:"data,omitempty"`
-	Error *string                            `json:"error,omitempty"`
+	Data  *CustomerEntitlements `json:"data,omitempty"`
+	Error *string               `json:"error,omitempty"`
 }
 
 // TenantStripeCheckoutInputBody defines model for TenantStripeCheckoutInputBody.
@@ -292,20 +345,23 @@ type GetTenantProductsParams struct {
 	ApiKey *string `json:"api-key,omitempty"`
 }
 
+// PostTenantServerConsumeByEnvironmentJSONRequestBody defines body for PostTenantServerConsumeByEnvironment for application/json ContentType.
+type PostTenantServerConsumeByEnvironmentJSONRequestBody = TenantServerConsumePurchaseInputBody
+
 // PostTenantServerCustomerJSONRequestBody defines body for PostTenantServerCustomer for application/json ContentType.
 type PostTenantServerCustomerJSONRequestBody = TenantServerGetCustomerInputBody
+
+// PostTenantServerGocardlessCancelByEnvironmentJSONRequestBody defines body for PostTenantServerGocardlessCancelByEnvironment for application/json ContentType.
+type PostTenantServerGocardlessCancelByEnvironmentJSONRequestBody = TenantCancelGoCardlessSubscriptionInputBody
+
+// PostTenantServerStripeCancelByEnvironmentJSONRequestBody defines body for PostTenantServerStripeCancelByEnvironment for application/json ContentType.
+type PostTenantServerStripeCancelByEnvironmentJSONRequestBody = TenantCancelStripeSubscriptionInputBody
 
 // PostTenantGocardlessBillingRequestFlowByEnvironmentJSONRequestBody defines body for PostTenantGocardlessBillingRequestFlowByEnvironment for application/json ContentType.
 type PostTenantGocardlessBillingRequestFlowByEnvironmentJSONRequestBody = TenantGoCardlessBillingRequestFlowInputBody
 
-// PostTenantGocardlessCancelByEnvironmentJSONRequestBody defines body for PostTenantGocardlessCancelByEnvironment for application/json ContentType.
-type PostTenantGocardlessCancelByEnvironmentJSONRequestBody = TenantCancelGoCardlessSubscriptionInputBody
-
 // PostTenantIdentifyJSONRequestBody defines body for PostTenantIdentify for application/json ContentType.
 type PostTenantIdentifyJSONRequestBody = TenantIdentifyUserInputBody
-
-// PostTenantStripeCancelByEnvironmentJSONRequestBody defines body for PostTenantStripeCancelByEnvironment for application/json ContentType.
-type PostTenantStripeCancelByEnvironmentJSONRequestBody = TenantCancelStripeSubscriptionInputBody
 
 // PostTenantStripeCheckoutByEnvironmentJSONRequestBody defines body for PostTenantStripeCheckoutByEnvironment for application/json ContentType.
 type PostTenantStripeCheckoutByEnvironmentJSONRequestBody = TenantStripeCheckoutInputBody
@@ -386,6 +442,11 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
+	// PostTenantServerConsumeByEnvironmentWithBody request with any body
+	PostTenantServerConsumeByEnvironmentWithBody(ctx context.Context, environment string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostTenantServerConsumeByEnvironment(ctx context.Context, environment string, body PostTenantServerConsumeByEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// PostTenantServerCustomerWithBody request with any body
 	PostTenantServerCustomerWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -393,6 +454,16 @@ type ClientInterface interface {
 
 	// GetTenantServerCustomers request
 	GetTenantServerCustomers(ctx context.Context, params *GetTenantServerCustomersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostTenantServerGocardlessCancelByEnvironmentWithBody request with any body
+	PostTenantServerGocardlessCancelByEnvironmentWithBody(ctx context.Context, environment string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostTenantServerGocardlessCancelByEnvironment(ctx context.Context, environment string, body PostTenantServerGocardlessCancelByEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostTenantServerStripeCancelByEnvironmentWithBody request with any body
+	PostTenantServerStripeCancelByEnvironmentWithBody(ctx context.Context, environment string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostTenantServerStripeCancelByEnvironment(ctx context.Context, environment string, body PostTenantServerStripeCancelByEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetTenantEntitlementsByEnvironment request
 	GetTenantEntitlementsByEnvironment(ctx context.Context, environment string, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -402,14 +473,6 @@ type ClientInterface interface {
 
 	PostTenantGocardlessBillingRequestFlowByEnvironment(ctx context.Context, environment string, body PostTenantGocardlessBillingRequestFlowByEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostTenantGocardlessCancelByEnvironmentWithBody request with any body
-	PostTenantGocardlessCancelByEnvironmentWithBody(ctx context.Context, environment string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	PostTenantGocardlessCancelByEnvironment(ctx context.Context, environment string, body PostTenantGocardlessCancelByEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GetTenantGocardlessProductsByEnvironment request
-	GetTenantGocardlessProductsByEnvironment(ctx context.Context, environment string, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// PostTenantIdentifyWithBody request with any body
 	PostTenantIdentifyWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -417,11 +480,6 @@ type ClientInterface interface {
 
 	// GetTenantProducts request
 	GetTenantProducts(ctx context.Context, params *GetTenantProductsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// PostTenantStripeCancelByEnvironmentWithBody request with any body
-	PostTenantStripeCancelByEnvironmentWithBody(ctx context.Context, environment string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	PostTenantStripeCancelByEnvironment(ctx context.Context, environment string, body PostTenantStripeCancelByEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostTenantStripeCheckoutByEnvironmentWithBody request with any body
 	PostTenantStripeCheckoutByEnvironmentWithBody(ctx context.Context, environment string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -435,6 +493,30 @@ type ClientInterface interface {
 	PostTenantSubscriptionsActiveWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PostTenantSubscriptionsActive(ctx context.Context, body PostTenantSubscriptionsActiveJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+}
+
+func (c *Client) PostTenantServerConsumeByEnvironmentWithBody(ctx context.Context, environment string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostTenantServerConsumeByEnvironmentRequestWithBody(c.Server, environment, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostTenantServerConsumeByEnvironment(ctx context.Context, environment string, body PostTenantServerConsumeByEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostTenantServerConsumeByEnvironmentRequest(c.Server, environment, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
 }
 
 func (c *Client) PostTenantServerCustomerWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -463,6 +545,54 @@ func (c *Client) PostTenantServerCustomer(ctx context.Context, body PostTenantSe
 
 func (c *Client) GetTenantServerCustomers(ctx context.Context, params *GetTenantServerCustomersParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetTenantServerCustomersRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostTenantServerGocardlessCancelByEnvironmentWithBody(ctx context.Context, environment string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostTenantServerGocardlessCancelByEnvironmentRequestWithBody(c.Server, environment, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostTenantServerGocardlessCancelByEnvironment(ctx context.Context, environment string, body PostTenantServerGocardlessCancelByEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostTenantServerGocardlessCancelByEnvironmentRequest(c.Server, environment, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostTenantServerStripeCancelByEnvironmentWithBody(ctx context.Context, environment string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostTenantServerStripeCancelByEnvironmentRequestWithBody(c.Server, environment, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostTenantServerStripeCancelByEnvironment(ctx context.Context, environment string, body PostTenantServerStripeCancelByEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostTenantServerStripeCancelByEnvironmentRequest(c.Server, environment, body)
 	if err != nil {
 		return nil, err
 	}
@@ -509,42 +639,6 @@ func (c *Client) PostTenantGocardlessBillingRequestFlowByEnvironment(ctx context
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostTenantGocardlessCancelByEnvironmentWithBody(ctx context.Context, environment string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostTenantGocardlessCancelByEnvironmentRequestWithBody(c.Server, environment, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostTenantGocardlessCancelByEnvironment(ctx context.Context, environment string, body PostTenantGocardlessCancelByEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostTenantGocardlessCancelByEnvironmentRequest(c.Server, environment, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) GetTenantGocardlessProductsByEnvironment(ctx context.Context, environment string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetTenantGocardlessProductsByEnvironmentRequest(c.Server, environment)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
 func (c *Client) PostTenantIdentifyWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostTenantIdentifyRequestWithBody(c.Server, contentType, body)
 	if err != nil {
@@ -571,30 +665,6 @@ func (c *Client) PostTenantIdentify(ctx context.Context, body PostTenantIdentify
 
 func (c *Client) GetTenantProducts(ctx context.Context, params *GetTenantProductsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetTenantProductsRequest(c.Server, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostTenantStripeCancelByEnvironmentWithBody(ctx context.Context, environment string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostTenantStripeCancelByEnvironmentRequestWithBody(c.Server, environment, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostTenantStripeCancelByEnvironment(ctx context.Context, environment string, body PostTenantStripeCancelByEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostTenantStripeCancelByEnvironmentRequest(c.Server, environment, body)
 	if err != nil {
 		return nil, err
 	}
@@ -663,6 +733,53 @@ func (c *Client) PostTenantSubscriptionsActive(ctx context.Context, body PostTen
 		return nil, err
 	}
 	return c.Client.Do(req)
+}
+
+// NewPostTenantServerConsumeByEnvironmentRequest calls the generic PostTenantServerConsumeByEnvironment builder with application/json body
+func NewPostTenantServerConsumeByEnvironmentRequest(server string, environment string, body PostTenantServerConsumeByEnvironmentJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostTenantServerConsumeByEnvironmentRequestWithBody(server, environment, "application/json", bodyReader)
+}
+
+// NewPostTenantServerConsumeByEnvironmentRequestWithBody generates requests for PostTenantServerConsumeByEnvironment with any type of body
+func NewPostTenantServerConsumeByEnvironmentRequestWithBody(server string, environment string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "environment", environment, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/tenant-server/consume/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
 }
 
 // NewPostTenantServerCustomerRequest calls the generic PostTenantServerCustomer builder with application/json body
@@ -770,6 +887,100 @@ func NewGetTenantServerCustomersRequest(server string, params *GetTenantServerCu
 	return req, nil
 }
 
+// NewPostTenantServerGocardlessCancelByEnvironmentRequest calls the generic PostTenantServerGocardlessCancelByEnvironment builder with application/json body
+func NewPostTenantServerGocardlessCancelByEnvironmentRequest(server string, environment string, body PostTenantServerGocardlessCancelByEnvironmentJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostTenantServerGocardlessCancelByEnvironmentRequestWithBody(server, environment, "application/json", bodyReader)
+}
+
+// NewPostTenantServerGocardlessCancelByEnvironmentRequestWithBody generates requests for PostTenantServerGocardlessCancelByEnvironment with any type of body
+func NewPostTenantServerGocardlessCancelByEnvironmentRequestWithBody(server string, environment string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "environment", environment, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/tenant-server/gocardless/cancel/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPostTenantServerStripeCancelByEnvironmentRequest calls the generic PostTenantServerStripeCancelByEnvironment builder with application/json body
+func NewPostTenantServerStripeCancelByEnvironmentRequest(server string, environment string, body PostTenantServerStripeCancelByEnvironmentJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostTenantServerStripeCancelByEnvironmentRequestWithBody(server, environment, "application/json", bodyReader)
+}
+
+// NewPostTenantServerStripeCancelByEnvironmentRequestWithBody generates requests for PostTenantServerStripeCancelByEnvironment with any type of body
+func NewPostTenantServerStripeCancelByEnvironmentRequestWithBody(server string, environment string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "environment", environment, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/tenant-server/stripe/cancel/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewGetTenantEntitlementsByEnvironmentRequest generates requests for GetTenantEntitlementsByEnvironment
 func NewGetTenantEntitlementsByEnvironmentRequest(server string, environment string) (*http.Request, error) {
 	var err error
@@ -847,87 +1058,6 @@ func NewPostTenantGocardlessBillingRequestFlowByEnvironmentRequestWithBody(serve
 	}
 
 	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewPostTenantGocardlessCancelByEnvironmentRequest calls the generic PostTenantGocardlessCancelByEnvironment builder with application/json body
-func NewPostTenantGocardlessCancelByEnvironmentRequest(server string, environment string, body PostTenantGocardlessCancelByEnvironmentJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewPostTenantGocardlessCancelByEnvironmentRequestWithBody(server, environment, "application/json", bodyReader)
-}
-
-// NewPostTenantGocardlessCancelByEnvironmentRequestWithBody generates requests for PostTenantGocardlessCancelByEnvironment with any type of body
-func NewPostTenantGocardlessCancelByEnvironmentRequestWithBody(server string, environment string, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "environment", environment, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/tenant/gocardless/cancel/%s", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewGetTenantGocardlessProductsByEnvironmentRequest generates requests for GetTenantGocardlessProductsByEnvironment
-func NewGetTenantGocardlessProductsByEnvironmentRequest(server string, environment string) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "environment", environment, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/tenant/gocardless/products/%s", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
 
 	return req, nil
 }
@@ -1010,53 +1140,6 @@ func NewGetTenantProductsRequest(server string, params *GetTenantProductsParams)
 		}
 
 	}
-
-	return req, nil
-}
-
-// NewPostTenantStripeCancelByEnvironmentRequest calls the generic PostTenantStripeCancelByEnvironment builder with application/json body
-func NewPostTenantStripeCancelByEnvironmentRequest(server string, environment string, body PostTenantStripeCancelByEnvironmentJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewPostTenantStripeCancelByEnvironmentRequestWithBody(server, environment, "application/json", bodyReader)
-}
-
-// NewPostTenantStripeCancelByEnvironmentRequestWithBody generates requests for PostTenantStripeCancelByEnvironment with any type of body
-func NewPostTenantStripeCancelByEnvironmentRequestWithBody(server string, environment string, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "environment", environment, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/tenant/stripe/cancel/%s", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -1225,6 +1308,11 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
+	// PostTenantServerConsumeByEnvironmentWithBodyWithResponse request with any body
+	PostTenantServerConsumeByEnvironmentWithBodyWithResponse(ctx context.Context, environment string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTenantServerConsumeByEnvironmentResponse, error)
+
+	PostTenantServerConsumeByEnvironmentWithResponse(ctx context.Context, environment string, body PostTenantServerConsumeByEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTenantServerConsumeByEnvironmentResponse, error)
+
 	// PostTenantServerCustomerWithBodyWithResponse request with any body
 	PostTenantServerCustomerWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTenantServerCustomerResponse, error)
 
@@ -1232,6 +1320,16 @@ type ClientWithResponsesInterface interface {
 
 	// GetTenantServerCustomersWithResponse request
 	GetTenantServerCustomersWithResponse(ctx context.Context, params *GetTenantServerCustomersParams, reqEditors ...RequestEditorFn) (*GetTenantServerCustomersResponse, error)
+
+	// PostTenantServerGocardlessCancelByEnvironmentWithBodyWithResponse request with any body
+	PostTenantServerGocardlessCancelByEnvironmentWithBodyWithResponse(ctx context.Context, environment string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTenantServerGocardlessCancelByEnvironmentResponse, error)
+
+	PostTenantServerGocardlessCancelByEnvironmentWithResponse(ctx context.Context, environment string, body PostTenantServerGocardlessCancelByEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTenantServerGocardlessCancelByEnvironmentResponse, error)
+
+	// PostTenantServerStripeCancelByEnvironmentWithBodyWithResponse request with any body
+	PostTenantServerStripeCancelByEnvironmentWithBodyWithResponse(ctx context.Context, environment string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTenantServerStripeCancelByEnvironmentResponse, error)
+
+	PostTenantServerStripeCancelByEnvironmentWithResponse(ctx context.Context, environment string, body PostTenantServerStripeCancelByEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTenantServerStripeCancelByEnvironmentResponse, error)
 
 	// GetTenantEntitlementsByEnvironmentWithResponse request
 	GetTenantEntitlementsByEnvironmentWithResponse(ctx context.Context, environment string, reqEditors ...RequestEditorFn) (*GetTenantEntitlementsByEnvironmentResponse, error)
@@ -1241,14 +1339,6 @@ type ClientWithResponsesInterface interface {
 
 	PostTenantGocardlessBillingRequestFlowByEnvironmentWithResponse(ctx context.Context, environment string, body PostTenantGocardlessBillingRequestFlowByEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTenantGocardlessBillingRequestFlowByEnvironmentResponse, error)
 
-	// PostTenantGocardlessCancelByEnvironmentWithBodyWithResponse request with any body
-	PostTenantGocardlessCancelByEnvironmentWithBodyWithResponse(ctx context.Context, environment string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTenantGocardlessCancelByEnvironmentResponse, error)
-
-	PostTenantGocardlessCancelByEnvironmentWithResponse(ctx context.Context, environment string, body PostTenantGocardlessCancelByEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTenantGocardlessCancelByEnvironmentResponse, error)
-
-	// GetTenantGocardlessProductsByEnvironmentWithResponse request
-	GetTenantGocardlessProductsByEnvironmentWithResponse(ctx context.Context, environment string, reqEditors ...RequestEditorFn) (*GetTenantGocardlessProductsByEnvironmentResponse, error)
-
 	// PostTenantIdentifyWithBodyWithResponse request with any body
 	PostTenantIdentifyWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTenantIdentifyResponse, error)
 
@@ -1256,11 +1346,6 @@ type ClientWithResponsesInterface interface {
 
 	// GetTenantProductsWithResponse request
 	GetTenantProductsWithResponse(ctx context.Context, params *GetTenantProductsParams, reqEditors ...RequestEditorFn) (*GetTenantProductsResponse, error)
-
-	// PostTenantStripeCancelByEnvironmentWithBodyWithResponse request with any body
-	PostTenantStripeCancelByEnvironmentWithBodyWithResponse(ctx context.Context, environment string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTenantStripeCancelByEnvironmentResponse, error)
-
-	PostTenantStripeCancelByEnvironmentWithResponse(ctx context.Context, environment string, body PostTenantStripeCancelByEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTenantStripeCancelByEnvironmentResponse, error)
 
 	// PostTenantStripeCheckoutByEnvironmentWithBodyWithResponse request with any body
 	PostTenantStripeCheckoutByEnvironmentWithBodyWithResponse(ctx context.Context, environment string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTenantStripeCheckoutByEnvironmentResponse, error)
@@ -1274,6 +1359,29 @@ type ClientWithResponsesInterface interface {
 	PostTenantSubscriptionsActiveWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTenantSubscriptionsActiveResponse, error)
 
 	PostTenantSubscriptionsActiveWithResponse(ctx context.Context, body PostTenantSubscriptionsActiveJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTenantSubscriptionsActiveResponse, error)
+}
+
+type PostTenantServerConsumeByEnvironmentResponse struct {
+	Body                          []byte
+	HTTPResponse                  *http.Response
+	JSON200                       *TenantServerConsumePurchaseResponseBody
+	ApplicationproblemJSONDefault *ErrorModel
+}
+
+// Status returns HTTPResponse.Status
+func (r PostTenantServerConsumeByEnvironmentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostTenantServerConsumeByEnvironmentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
 }
 
 type PostTenantServerCustomerResponse struct {
@@ -1316,6 +1424,52 @@ func (r GetTenantServerCustomersResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetTenantServerCustomersResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostTenantServerGocardlessCancelByEnvironmentResponse struct {
+	Body                          []byte
+	HTTPResponse                  *http.Response
+	JSON200                       *TenantCancelGoCardlessSubscriptionResponseBody
+	ApplicationproblemJSONDefault *ErrorModel
+}
+
+// Status returns HTTPResponse.Status
+func (r PostTenantServerGocardlessCancelByEnvironmentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostTenantServerGocardlessCancelByEnvironmentResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostTenantServerStripeCancelByEnvironmentResponse struct {
+	Body                          []byte
+	HTTPResponse                  *http.Response
+	JSON200                       *TenantCancelStripeSubscriptionResponseBody
+	ApplicationproblemJSONDefault *ErrorModel
+}
+
+// Status returns HTTPResponse.Status
+func (r PostTenantServerStripeCancelByEnvironmentResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostTenantServerStripeCancelByEnvironmentResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -1368,52 +1522,6 @@ func (r PostTenantGocardlessBillingRequestFlowByEnvironmentResponse) StatusCode(
 	return 0
 }
 
-type PostTenantGocardlessCancelByEnvironmentResponse struct {
-	Body                          []byte
-	HTTPResponse                  *http.Response
-	JSON200                       *TenantCancelGoCardlessSubscriptionResponseBody
-	ApplicationproblemJSONDefault *ErrorModel
-}
-
-// Status returns HTTPResponse.Status
-func (r PostTenantGocardlessCancelByEnvironmentResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PostTenantGocardlessCancelByEnvironmentResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type GetTenantGocardlessProductsByEnvironmentResponse struct {
-	Body                          []byte
-	HTTPResponse                  *http.Response
-	JSON200                       *TenantListGocardlessProductsResponseBody
-	ApplicationproblemJSONDefault *ErrorModel
-}
-
-// Status returns HTTPResponse.Status
-func (r GetTenantGocardlessProductsByEnvironmentResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetTenantGocardlessProductsByEnvironmentResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
 type PostTenantIdentifyResponse struct {
 	Body                          []byte
 	HTTPResponse                  *http.Response
@@ -1454,29 +1562,6 @@ func (r GetTenantProductsResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetTenantProductsResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type PostTenantStripeCancelByEnvironmentResponse struct {
-	Body                          []byte
-	HTTPResponse                  *http.Response
-	JSON200                       *TenantCancelStripeSubscriptionResponseBody
-	ApplicationproblemJSONDefault *ErrorModel
-}
-
-// Status returns HTTPResponse.Status
-func (r PostTenantStripeCancelByEnvironmentResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PostTenantStripeCancelByEnvironmentResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -1552,6 +1637,23 @@ func (r PostTenantSubscriptionsActiveResponse) StatusCode() int {
 	return 0
 }
 
+// PostTenantServerConsumeByEnvironmentWithBodyWithResponse request with arbitrary body returning *PostTenantServerConsumeByEnvironmentResponse
+func (c *ClientWithResponses) PostTenantServerConsumeByEnvironmentWithBodyWithResponse(ctx context.Context, environment string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTenantServerConsumeByEnvironmentResponse, error) {
+	rsp, err := c.PostTenantServerConsumeByEnvironmentWithBody(ctx, environment, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostTenantServerConsumeByEnvironmentResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostTenantServerConsumeByEnvironmentWithResponse(ctx context.Context, environment string, body PostTenantServerConsumeByEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTenantServerConsumeByEnvironmentResponse, error) {
+	rsp, err := c.PostTenantServerConsumeByEnvironment(ctx, environment, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostTenantServerConsumeByEnvironmentResponse(rsp)
+}
+
 // PostTenantServerCustomerWithBodyWithResponse request with arbitrary body returning *PostTenantServerCustomerResponse
 func (c *ClientWithResponses) PostTenantServerCustomerWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTenantServerCustomerResponse, error) {
 	rsp, err := c.PostTenantServerCustomerWithBody(ctx, contentType, body, reqEditors...)
@@ -1576,6 +1678,40 @@ func (c *ClientWithResponses) GetTenantServerCustomersWithResponse(ctx context.C
 		return nil, err
 	}
 	return ParseGetTenantServerCustomersResponse(rsp)
+}
+
+// PostTenantServerGocardlessCancelByEnvironmentWithBodyWithResponse request with arbitrary body returning *PostTenantServerGocardlessCancelByEnvironmentResponse
+func (c *ClientWithResponses) PostTenantServerGocardlessCancelByEnvironmentWithBodyWithResponse(ctx context.Context, environment string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTenantServerGocardlessCancelByEnvironmentResponse, error) {
+	rsp, err := c.PostTenantServerGocardlessCancelByEnvironmentWithBody(ctx, environment, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostTenantServerGocardlessCancelByEnvironmentResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostTenantServerGocardlessCancelByEnvironmentWithResponse(ctx context.Context, environment string, body PostTenantServerGocardlessCancelByEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTenantServerGocardlessCancelByEnvironmentResponse, error) {
+	rsp, err := c.PostTenantServerGocardlessCancelByEnvironment(ctx, environment, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostTenantServerGocardlessCancelByEnvironmentResponse(rsp)
+}
+
+// PostTenantServerStripeCancelByEnvironmentWithBodyWithResponse request with arbitrary body returning *PostTenantServerStripeCancelByEnvironmentResponse
+func (c *ClientWithResponses) PostTenantServerStripeCancelByEnvironmentWithBodyWithResponse(ctx context.Context, environment string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTenantServerStripeCancelByEnvironmentResponse, error) {
+	rsp, err := c.PostTenantServerStripeCancelByEnvironmentWithBody(ctx, environment, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostTenantServerStripeCancelByEnvironmentResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostTenantServerStripeCancelByEnvironmentWithResponse(ctx context.Context, environment string, body PostTenantServerStripeCancelByEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTenantServerStripeCancelByEnvironmentResponse, error) {
+	rsp, err := c.PostTenantServerStripeCancelByEnvironment(ctx, environment, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostTenantServerStripeCancelByEnvironmentResponse(rsp)
 }
 
 // GetTenantEntitlementsByEnvironmentWithResponse request returning *GetTenantEntitlementsByEnvironmentResponse
@@ -1604,32 +1740,6 @@ func (c *ClientWithResponses) PostTenantGocardlessBillingRequestFlowByEnvironmen
 	return ParsePostTenantGocardlessBillingRequestFlowByEnvironmentResponse(rsp)
 }
 
-// PostTenantGocardlessCancelByEnvironmentWithBodyWithResponse request with arbitrary body returning *PostTenantGocardlessCancelByEnvironmentResponse
-func (c *ClientWithResponses) PostTenantGocardlessCancelByEnvironmentWithBodyWithResponse(ctx context.Context, environment string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTenantGocardlessCancelByEnvironmentResponse, error) {
-	rsp, err := c.PostTenantGocardlessCancelByEnvironmentWithBody(ctx, environment, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostTenantGocardlessCancelByEnvironmentResponse(rsp)
-}
-
-func (c *ClientWithResponses) PostTenantGocardlessCancelByEnvironmentWithResponse(ctx context.Context, environment string, body PostTenantGocardlessCancelByEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTenantGocardlessCancelByEnvironmentResponse, error) {
-	rsp, err := c.PostTenantGocardlessCancelByEnvironment(ctx, environment, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostTenantGocardlessCancelByEnvironmentResponse(rsp)
-}
-
-// GetTenantGocardlessProductsByEnvironmentWithResponse request returning *GetTenantGocardlessProductsByEnvironmentResponse
-func (c *ClientWithResponses) GetTenantGocardlessProductsByEnvironmentWithResponse(ctx context.Context, environment string, reqEditors ...RequestEditorFn) (*GetTenantGocardlessProductsByEnvironmentResponse, error) {
-	rsp, err := c.GetTenantGocardlessProductsByEnvironment(ctx, environment, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetTenantGocardlessProductsByEnvironmentResponse(rsp)
-}
-
 // PostTenantIdentifyWithBodyWithResponse request with arbitrary body returning *PostTenantIdentifyResponse
 func (c *ClientWithResponses) PostTenantIdentifyWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTenantIdentifyResponse, error) {
 	rsp, err := c.PostTenantIdentifyWithBody(ctx, contentType, body, reqEditors...)
@@ -1654,23 +1764,6 @@ func (c *ClientWithResponses) GetTenantProductsWithResponse(ctx context.Context,
 		return nil, err
 	}
 	return ParseGetTenantProductsResponse(rsp)
-}
-
-// PostTenantStripeCancelByEnvironmentWithBodyWithResponse request with arbitrary body returning *PostTenantStripeCancelByEnvironmentResponse
-func (c *ClientWithResponses) PostTenantStripeCancelByEnvironmentWithBodyWithResponse(ctx context.Context, environment string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTenantStripeCancelByEnvironmentResponse, error) {
-	rsp, err := c.PostTenantStripeCancelByEnvironmentWithBody(ctx, environment, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostTenantStripeCancelByEnvironmentResponse(rsp)
-}
-
-func (c *ClientWithResponses) PostTenantStripeCancelByEnvironmentWithResponse(ctx context.Context, environment string, body PostTenantStripeCancelByEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTenantStripeCancelByEnvironmentResponse, error) {
-	rsp, err := c.PostTenantStripeCancelByEnvironment(ctx, environment, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostTenantStripeCancelByEnvironmentResponse(rsp)
 }
 
 // PostTenantStripeCheckoutByEnvironmentWithBodyWithResponse request with arbitrary body returning *PostTenantStripeCheckoutByEnvironmentResponse
@@ -1714,6 +1807,39 @@ func (c *ClientWithResponses) PostTenantSubscriptionsActiveWithResponse(ctx cont
 		return nil, err
 	}
 	return ParsePostTenantSubscriptionsActiveResponse(rsp)
+}
+
+// ParsePostTenantServerConsumeByEnvironmentResponse parses an HTTP response from a PostTenantServerConsumeByEnvironmentWithResponse call
+func ParsePostTenantServerConsumeByEnvironmentResponse(rsp *http.Response) (*PostTenantServerConsumeByEnvironmentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostTenantServerConsumeByEnvironmentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TenantServerConsumePurchaseResponseBody
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorModel
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
 }
 
 // ParsePostTenantServerCustomerResponse parses an HTTP response from a PostTenantServerCustomerWithResponse call
@@ -1765,6 +1891,72 @@ func ParseGetTenantServerCustomersResponse(rsp *http.Response) (*GetTenantServer
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest ListCustomerResponseBody
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorModel
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostTenantServerGocardlessCancelByEnvironmentResponse parses an HTTP response from a PostTenantServerGocardlessCancelByEnvironmentWithResponse call
+func ParsePostTenantServerGocardlessCancelByEnvironmentResponse(rsp *http.Response) (*PostTenantServerGocardlessCancelByEnvironmentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostTenantServerGocardlessCancelByEnvironmentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TenantCancelGoCardlessSubscriptionResponseBody
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest ErrorModel
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostTenantServerStripeCancelByEnvironmentResponse parses an HTTP response from a PostTenantServerStripeCancelByEnvironmentWithResponse call
+func ParsePostTenantServerStripeCancelByEnvironmentResponse(rsp *http.Response) (*PostTenantServerStripeCancelByEnvironmentResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostTenantServerStripeCancelByEnvironmentResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TenantCancelStripeSubscriptionResponseBody
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -1848,72 +2040,6 @@ func ParsePostTenantGocardlessBillingRequestFlowByEnvironmentResponse(rsp *http.
 	return response, nil
 }
 
-// ParsePostTenantGocardlessCancelByEnvironmentResponse parses an HTTP response from a PostTenantGocardlessCancelByEnvironmentWithResponse call
-func ParsePostTenantGocardlessCancelByEnvironmentResponse(rsp *http.Response) (*PostTenantGocardlessCancelByEnvironmentResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &PostTenantGocardlessCancelByEnvironmentResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest TenantCancelGoCardlessSubscriptionResponseBody
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest ErrorModel
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.ApplicationproblemJSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseGetTenantGocardlessProductsByEnvironmentResponse parses an HTTP response from a GetTenantGocardlessProductsByEnvironmentWithResponse call
-func ParseGetTenantGocardlessProductsByEnvironmentResponse(rsp *http.Response) (*GetTenantGocardlessProductsByEnvironmentResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetTenantGocardlessProductsByEnvironmentResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest TenantListGocardlessProductsResponseBody
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest ErrorModel
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.ApplicationproblemJSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
 // ParsePostTenantIdentifyResponse parses an HTTP response from a PostTenantIdentifyWithResponse call
 func ParsePostTenantIdentifyResponse(rsp *http.Response) (*PostTenantIdentifyResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -1963,39 +2089,6 @@ func ParseGetTenantProductsResponse(rsp *http.Response) (*GetTenantProductsRespo
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest TenantListProductsResponseBody
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest ErrorModel
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.ApplicationproblemJSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParsePostTenantStripeCancelByEnvironmentResponse parses an HTTP response from a PostTenantStripeCancelByEnvironmentWithResponse call
-func ParsePostTenantStripeCancelByEnvironmentResponse(rsp *http.Response) (*PostTenantStripeCancelByEnvironmentResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &PostTenantStripeCancelByEnvironmentResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest TenantCancelStripeSubscriptionResponseBody
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
