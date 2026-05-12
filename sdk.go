@@ -212,7 +212,7 @@ func (c *CrosspayServerClient) GetCustomerInfo(ctx context.Context, customerEmai
 		Environment:   ptr(string(environment)),
 	}
 
-	resp, err := c.client.PostTenantServerCustomer(ctx, body)
+	resp, err := c.client.PostTenantServerV2Customer(ctx, body)
 	if err != nil {
 		return nil, err
 	}
@@ -227,7 +227,7 @@ func (c *CrosspayServerClient) GetCustomerInfo(ctx context.Context, customerEmai
 		return nil, err
 	}
 
-	var result TenantServerGetCustomerResponseBody
+	var result TenantServerGetCustomerV2ResponseBody
 	if err := json.Unmarshal(respBody, &result); err != nil {
 		return nil, err
 	}
