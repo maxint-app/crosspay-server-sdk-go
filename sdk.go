@@ -239,24 +239,6 @@ func (c *CrosspayServerClient) GetCustomerInfo(ctx context.Context, customerEmai
 	return result.Data, nil
 }
 
-func (c *CrosspayServerClient) ConsumePurchase(ctx context.Context, customerEmail string, productId string, environment Environment) error {
-	body := TenantServerConsumePurchaseInputBody{
-		CustomerEmail: customerEmail,
-		ProductId:     productId,
-	}
-
-	resp, err := c.client.PostTenantServerConsumeByEnvironment(ctx, string(environment), body)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
-	}
-
-	return nil
-}
-
 // ConstructWebhookEvent validates and parses a webhook event
 func (c *CrosspayServerClient) ConstructWebhookEvent(
 	webhookPublicKey string,

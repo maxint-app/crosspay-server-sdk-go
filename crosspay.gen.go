@@ -39,6 +39,7 @@ func (e TenantEntitlementEntitlementType) Valid() bool {
 
 // CustomerEntitlement defines model for CustomerEntitlement.
 type CustomerEntitlement struct {
+	Id   string `json:"id"`
 	Name string `json:"name"`
 }
 
@@ -335,18 +336,6 @@ type TenantProducts struct {
 	Stripe     TenantEntitlementProduct `json:"stripe"`
 }
 
-// TenantServerConsumePurchaseInputBody defines model for TenantServerConsumePurchaseInputBody.
-type TenantServerConsumePurchaseInputBody struct {
-	CustomerEmail string `json:"customer_email"`
-	ProductId     string `json:"product_id"`
-}
-
-// TenantServerConsumePurchaseResponseBody defines model for TenantServerConsumePurchaseResponseBody.
-type TenantServerConsumePurchaseResponseBody struct {
-	Error   *string `json:"error,omitempty"`
-	Message *string `json:"message,omitempty"`
-}
-
 // TenantServerGetCustomerInputBody defines model for TenantServerGetCustomerInputBody.
 type TenantServerGetCustomerInputBody struct {
 	CustomerEmail string  `json:"customer_email"`
@@ -389,9 +378,6 @@ type GetTenantServerCustomersParams struct {
 type GetTenantProductsParams struct {
 	ApiKey *string `json:"api-key,omitempty"`
 }
-
-// PostTenantServerConsumeByEnvironmentJSONRequestBody defines body for PostTenantServerConsumeByEnvironment for application/json ContentType.
-type PostTenantServerConsumeByEnvironmentJSONRequestBody = TenantServerConsumePurchaseInputBody
 
 // PostTenantServerCustomerJSONRequestBody defines body for PostTenantServerCustomer for application/json ContentType.
 type PostTenantServerCustomerJSONRequestBody = TenantServerGetCustomerInputBody
@@ -493,11 +479,6 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
-	// PostTenantServerConsumeByEnvironmentWithBody request with any body
-	PostTenantServerConsumeByEnvironmentWithBody(ctx context.Context, environment string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	PostTenantServerConsumeByEnvironment(ctx context.Context, environment string, body PostTenantServerConsumeByEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// PostTenantServerCustomerWithBody request with any body
 	PostTenantServerCustomerWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -554,30 +535,6 @@ type ClientInterface interface {
 	PostTenantSubscriptionsActiveWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PostTenantSubscriptionsActive(ctx context.Context, body PostTenantSubscriptionsActiveJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-}
-
-func (c *Client) PostTenantServerConsumeByEnvironmentWithBody(ctx context.Context, environment string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostTenantServerConsumeByEnvironmentRequestWithBody(c.Server, environment, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostTenantServerConsumeByEnvironment(ctx context.Context, environment string, body PostTenantServerConsumeByEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostTenantServerConsumeByEnvironmentRequest(c.Server, environment, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
 }
 
 func (c *Client) PostTenantServerCustomerWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -842,53 +799,6 @@ func (c *Client) PostTenantSubscriptionsActive(ctx context.Context, body PostTen
 		return nil, err
 	}
 	return c.Client.Do(req)
-}
-
-// NewPostTenantServerConsumeByEnvironmentRequest calls the generic PostTenantServerConsumeByEnvironment builder with application/json body
-func NewPostTenantServerConsumeByEnvironmentRequest(server string, environment string, body PostTenantServerConsumeByEnvironmentJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewPostTenantServerConsumeByEnvironmentRequestWithBody(server, environment, "application/json", bodyReader)
-}
-
-// NewPostTenantServerConsumeByEnvironmentRequestWithBody generates requests for PostTenantServerConsumeByEnvironment with any type of body
-func NewPostTenantServerConsumeByEnvironmentRequestWithBody(server string, environment string, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "environment", environment, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/tenant-server/consume/%s", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
 }
 
 // NewPostTenantServerCustomerRequest calls the generic PostTenantServerCustomer builder with application/json body
@@ -1497,11 +1407,6 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
-	// PostTenantServerConsumeByEnvironmentWithBodyWithResponse request with any body
-	PostTenantServerConsumeByEnvironmentWithBodyWithResponse(ctx context.Context, environment string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTenantServerConsumeByEnvironmentResponse, error)
-
-	PostTenantServerConsumeByEnvironmentWithResponse(ctx context.Context, environment string, body PostTenantServerConsumeByEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTenantServerConsumeByEnvironmentResponse, error)
-
 	// PostTenantServerCustomerWithBodyWithResponse request with any body
 	PostTenantServerCustomerWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTenantServerCustomerResponse, error)
 
@@ -1558,29 +1463,6 @@ type ClientWithResponsesInterface interface {
 	PostTenantSubscriptionsActiveWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTenantSubscriptionsActiveResponse, error)
 
 	PostTenantSubscriptionsActiveWithResponse(ctx context.Context, body PostTenantSubscriptionsActiveJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTenantSubscriptionsActiveResponse, error)
-}
-
-type PostTenantServerConsumeByEnvironmentResponse struct {
-	Body                          []byte
-	HTTPResponse                  *http.Response
-	JSON200                       *TenantServerConsumePurchaseResponseBody
-	ApplicationproblemJSONDefault *ErrorModel
-}
-
-// Status returns HTTPResponse.Status
-func (r PostTenantServerConsumeByEnvironmentResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PostTenantServerConsumeByEnvironmentResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
 }
 
 type PostTenantServerCustomerResponse struct {
@@ -1882,23 +1764,6 @@ func (r PostTenantSubscriptionsActiveResponse) StatusCode() int {
 	return 0
 }
 
-// PostTenantServerConsumeByEnvironmentWithBodyWithResponse request with arbitrary body returning *PostTenantServerConsumeByEnvironmentResponse
-func (c *ClientWithResponses) PostTenantServerConsumeByEnvironmentWithBodyWithResponse(ctx context.Context, environment string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTenantServerConsumeByEnvironmentResponse, error) {
-	rsp, err := c.PostTenantServerConsumeByEnvironmentWithBody(ctx, environment, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostTenantServerConsumeByEnvironmentResponse(rsp)
-}
-
-func (c *ClientWithResponses) PostTenantServerConsumeByEnvironmentWithResponse(ctx context.Context, environment string, body PostTenantServerConsumeByEnvironmentJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTenantServerConsumeByEnvironmentResponse, error) {
-	rsp, err := c.PostTenantServerConsumeByEnvironment(ctx, environment, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostTenantServerConsumeByEnvironmentResponse(rsp)
-}
-
 // PostTenantServerCustomerWithBodyWithResponse request with arbitrary body returning *PostTenantServerCustomerResponse
 func (c *ClientWithResponses) PostTenantServerCustomerWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTenantServerCustomerResponse, error) {
 	rsp, err := c.PostTenantServerCustomerWithBody(ctx, contentType, body, reqEditors...)
@@ -2086,39 +1951,6 @@ func (c *ClientWithResponses) PostTenantSubscriptionsActiveWithResponse(ctx cont
 		return nil, err
 	}
 	return ParsePostTenantSubscriptionsActiveResponse(rsp)
-}
-
-// ParsePostTenantServerConsumeByEnvironmentResponse parses an HTTP response from a PostTenantServerConsumeByEnvironmentWithResponse call
-func ParsePostTenantServerConsumeByEnvironmentResponse(rsp *http.Response) (*PostTenantServerConsumeByEnvironmentResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &PostTenantServerConsumeByEnvironmentResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest TenantServerConsumePurchaseResponseBody
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest ErrorModel
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.ApplicationproblemJSONDefault = &dest
-
-	}
-
-	return response, nil
 }
 
 // ParsePostTenantServerCustomerResponse parses an HTTP response from a PostTenantServerCustomerWithResponse call
