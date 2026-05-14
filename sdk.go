@@ -122,47 +122,13 @@ func (c *CrosspayServerClient) ListEntitlements(ctx context.Context, environment
 	return *result.Data, nil
 }
 
-// GetActiveSubscription retrieves the active subscription for a customer
-func (c *CrosspayServerClient) GetActiveSubscription(ctx context.Context, customerEmail string, environment Environment) (*StorableSubscription, error) {
-	body := TenantActiveSubscriptionInputBody{
-		CustomerEmail: customerEmail,
-		Environment:   ptr(string(environment)),
-	}
-
-	resp, err := c.client.PostTenantSubscriptionsActive(ctx, body)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
-	}
-
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	var result TenantActiveSubscriptionResponseBody
-	if err := json.Unmarshal(respBody, &result); err != nil {
-		return nil, err
-	}
-
-	if result.Error != nil && *result.Error != "" {
-		return nil, errors.New(*result.Error)
-	}
-
-	return result.Data, nil
-}
-
 // GetActiveProduct retrieves the active product for a customer
-func (c *CrosspayServerClient) GetActiveProduct(ctx context.Context, customerEmail string, environment Environment) (*TenantProduct, error) {
-	activeSubscription, err := c.GetActiveSubscription(ctx, customerEmail, environment)
+func (c *CrosspayServerClient) GetActiveProducts(ctx context.Context, customerEmail string, environment Environment) ([]TenantProduct, error) {
+	activeEntitlements, err := c.GetActiveEntitlements(ctx, customerEmail, environment)
 	if err != nil {
 		return nil, err
 	}
-	if activeSubscription == nil {
+	if activeEntitlements == nil {
 		return nil, nil
 	}
 
@@ -171,37 +137,38 @@ func (c *CrosspayServerClient) GetActiveProduct(ctx context.Context, customerEma
 		return nil, err
 	}
 
+	activeProducts := []TenantProduct{}
+
 	for _, product := range products {
-		if product.ProductId == activeSubscription.ProductId {
-			return &product, nil
+		for _, activeEntitlement := range activeEntitlements {
+			if product.EntitlementId == activeEntitlement.Id {
+				activeProducts = append(activeProducts, product)
+			}
 		}
 	}
 
-	return nil, nil
+	return activeProducts, nil
 }
 
-// GetActiveEntitlement retrieves the active entitlement for a customer
-func (c *CrosspayServerClient) GetActiveEntitlement(ctx context.Context, customerEmail string, environment Environment) (*TenantEntitlement, error) {
-	activeProduct, err := c.GetActiveProduct(ctx, customerEmail, environment)
+// GetActiveEntitlements retrieves the active entitlement for a customer
+func (c *CrosspayServerClient) GetActiveEntitlements(ctx context.Context, customerEmail string, environment Environment) ([]StorableEntitlement, error) {
+	body := TenantActiveEntitlementsInputBody{
+		CustomerEmail: customerEmail,
+		Environment:   ptr(string(environment)),
+	}
+	resp, err := c.client.PostTenantEntitlementsActive(ctx, body)
 	if err != nil {
 		return nil, err
 	}
-	if activeProduct == nil {
-		return nil, nil
-	}
-
-	entitlements, err := c.ListEntitlements(ctx, environment)
+	result, err := ParsePostTenantEntitlementsActiveResponse(resp)
 	if err != nil {
 		return nil, err
 	}
-
-	for _, entitlement := range entitlements {
-		if entitlement.Id == activeProduct.EntitlementId {
-			return &entitlement, nil
-		}
+	if result.JSON200.Error != nil && *result.JSON200.Error != "" {
+		return nil, errors.New(*result.JSON200.Error)
 	}
 
-	return nil, nil
+	return *result.JSON200.Data, nil
 }
 
 // ListCustomers retrieves a paginated list of customers
@@ -239,13 +206,13 @@ func (c *CrosspayServerClient) ListCustomers(ctx context.Context, limit *int64, 
 }
 
 // GetCustomerInfo retrieves extended customer information
-func (c *CrosspayServerClient) GetCustomerInfo(ctx context.Context, customerEmail string, environment Environment) (*GetCustomerExtendedInfoByEmailRow, error) {
+func (c *CrosspayServerClient) GetCustomerInfo(ctx context.Context, customerEmail string, environment Environment) (*CustomerEntitlements, error) {
 	body := TenantServerGetCustomerInputBody{
 		CustomerEmail: customerEmail,
 		Environment:   ptr(string(environment)),
 	}
 
-	resp, err := c.client.PostTenantServerCustomer(ctx, body)
+	resp, err := c.client.PostTenantServerV2Customer(ctx, body)
 	if err != nil {
 		return nil, err
 	}
@@ -260,7 +227,7 @@ func (c *CrosspayServerClient) GetCustomerInfo(ctx context.Context, customerEmai
 		return nil, err
 	}
 
-	var result TenantServerGetCustomerResponseBody
+	var result TenantServerGetCustomerV2ResponseBody
 	if err := json.Unmarshal(respBody, &result); err != nil {
 		return nil, err
 	}
@@ -278,7 +245,7 @@ func (c *CrosspayServerClient) ConstructWebhookEvent(
 	rawPayload []byte,
 	signatureHeader string,
 	timestampHeader string,
-) (*GetCustomerExtendedInfoByEmailRow, error) {
+) (*CustomerEntitlements, error) {
 	// Parse the timestamp
 	timestampDate, err := time.Parse(time.RFC3339, timestampHeader)
 	if err != nil {
@@ -331,7 +298,7 @@ func (c *CrosspayServerClient) ConstructWebhookEvent(
 	}
 
 	// Parse and return the payload
-	var event GetCustomerExtendedInfoByEmailRow
+	var event CustomerEntitlements
 	if err := json.Unmarshal(rawPayload, &event); err != nil {
 		return nil, fmt.Errorf("failed to parse webhook payload: %w", err)
 	}
