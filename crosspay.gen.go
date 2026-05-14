@@ -37,10 +37,48 @@ func (e TenantEntitlementEntitlementType) Valid() bool {
 	}
 }
 
+// Defines values for TenantGoCardlessBillingRequestFlowInputBodyProrationMode.
+const (
+	TenantGoCardlessBillingRequestFlowInputBodyProrationModeDowngrade TenantGoCardlessBillingRequestFlowInputBodyProrationMode = "downgrade"
+	TenantGoCardlessBillingRequestFlowInputBodyProrationModeUpgrade   TenantGoCardlessBillingRequestFlowInputBodyProrationMode = "upgrade"
+)
+
+// Valid indicates whether the value is a known member of the TenantGoCardlessBillingRequestFlowInputBodyProrationMode enum.
+func (e TenantGoCardlessBillingRequestFlowInputBodyProrationMode) Valid() bool {
+	switch e {
+	case TenantGoCardlessBillingRequestFlowInputBodyProrationModeDowngrade:
+		return true
+	case TenantGoCardlessBillingRequestFlowInputBodyProrationModeUpgrade:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for TenantStripeCheckoutInputBodyProrationMode.
+const (
+	TenantStripeCheckoutInputBodyProrationModeDowngrade TenantStripeCheckoutInputBodyProrationMode = "downgrade"
+	TenantStripeCheckoutInputBodyProrationModeUpgrade   TenantStripeCheckoutInputBodyProrationMode = "upgrade"
+)
+
+// Valid indicates whether the value is a known member of the TenantStripeCheckoutInputBodyProrationMode enum.
+func (e TenantStripeCheckoutInputBodyProrationMode) Valid() bool {
+	switch e {
+	case TenantStripeCheckoutInputBodyProrationModeDowngrade:
+		return true
+	case TenantStripeCheckoutInputBodyProrationModeUpgrade:
+		return true
+	default:
+		return false
+	}
+}
+
 // CustomerEntitlement defines model for CustomerEntitlement.
 type CustomerEntitlement struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
+	Id     string  `json:"id"`
+	Name   string  `json:"name"`
+	Status *string `json:"status,omitempty"`
+	Store  *string `json:"store,omitempty"`
 }
 
 // CustomerEntitlements defines model for CustomerEntitlements.
@@ -146,7 +184,7 @@ type StorableEntitlement struct {
 	Id              string  `json:"id"`
 	ProductId       string  `json:"product_id"`
 	PurchaseState   *string `json:"purchase_state,omitempty"`
-	RenewalStatus   string  `json:"renewal_status"`
+	RenewalStatus   *string `json:"renewal_status,omitempty"`
 	Status          string  `json:"status"`
 	Store           string  `json:"store"`
 	TrialExpiresAt  *int64  `json:"trial_expires_at"`
@@ -258,7 +296,7 @@ type TenantEntitlement struct {
 	Id              string                           `json:"id"`
 	Metadata        []byte                           `json:"metadata"`
 	Name            string                           `json:"name"`
-	PeriodMs        int64                            `json:"period_ms"`
+	PeriodMs        *int64                           `json:"period_ms"`
 	Products        TenantProducts                   `json:"products"`
 }
 
@@ -276,11 +314,16 @@ type TenantEntitlementProduct struct {
 
 // TenantGoCardlessBillingRequestFlowInputBody defines model for TenantGoCardlessBillingRequestFlowInputBody.
 type TenantGoCardlessBillingRequestFlowInputBody struct {
-	CustomerEmail      string `json:"customer_email"`
-	FailureRedirectUrl string `json:"failure_redirect_url"`
-	ProductId          string `json:"product_id"`
-	RedirectUrl        string `json:"redirect_url"`
+	CustomerEmail      string                                                    `json:"customer_email"`
+	FailureRedirectUrl string                                                    `json:"failure_redirect_url"`
+	ProductId          string                                                    `json:"product_id"`
+	ProratedProductId  *string                                                   `json:"prorated_product_id,omitempty"`
+	ProrationMode      *TenantGoCardlessBillingRequestFlowInputBodyProrationMode `json:"proration_mode,omitempty"`
+	RedirectUrl        string                                                    `json:"redirect_url"`
 }
+
+// TenantGoCardlessBillingRequestFlowInputBodyProrationMode defines model for TenantGoCardlessBillingRequestFlowInputBody.ProrationMode.
+type TenantGoCardlessBillingRequestFlowInputBodyProrationMode string
 
 // TenantGoCardlessBillingRequestFlowResponseBody defines model for TenantGoCardlessBillingRequestFlowResponseBody.
 type TenantGoCardlessBillingRequestFlowResponseBody struct {
@@ -356,11 +399,16 @@ type TenantServerGetCustomerV2ResponseBody struct {
 
 // TenantStripeCheckoutInputBody defines model for TenantStripeCheckoutInputBody.
 type TenantStripeCheckoutInputBody struct {
-	CustomerEmail      string `json:"customer_email"`
-	FailureRedirectUrl string `json:"failure_redirect_url"`
-	ProductId          string `json:"product_id"`
-	RedirectUrl        string `json:"redirect_url"`
+	CustomerEmail      string                                      `json:"customer_email"`
+	FailureRedirectUrl string                                      `json:"failure_redirect_url"`
+	ProductId          string                                      `json:"product_id"`
+	ProratedProductId  *string                                     `json:"prorated_product_id,omitempty"`
+	ProrationMode      *TenantStripeCheckoutInputBodyProrationMode `json:"proration_mode,omitempty"`
+	RedirectUrl        string                                      `json:"redirect_url"`
 }
+
+// TenantStripeCheckoutInputBodyProrationMode defines model for TenantStripeCheckoutInputBody.ProrationMode.
+type TenantStripeCheckoutInputBodyProrationMode string
 
 // TenantStripeCheckoutResponseBody defines model for TenantStripeCheckoutResponseBody.
 type TenantStripeCheckoutResponseBody struct {
