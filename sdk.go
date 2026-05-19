@@ -239,6 +239,48 @@ func (c *CrosspayServerClient) GetCustomerInfo(ctx context.Context, customerEmai
 	return result.Data, nil
 }
 
+func (c *CrosspayServerClient) CancelStripeSubscription(
+	ctx context.Context,
+	environment Environment,
+	entitlementId,
+	customerEmail string,
+) error {
+	resp, err := c.client.PostTenantServerStripeCancelByEnvironment(ctx, string(environment), TenantCancelStripeSubscriptionInputBody{
+		CustomerEmail: customerEmail,
+		EntitlementId: entitlementId,
+	})
+
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	return nil
+}
+
+func (c *CrosspayServerClient) CancelGocardlessSubscription(
+	ctx context.Context,
+	environment Environment,
+	entitlementId,
+	customerEmail string,
+) error {
+	resp, err := c.client.PostTenantServerGocardlessCancelByEnvironment(ctx, string(environment), TenantCancelGoCardlessSubscriptionInputBody{
+		CustomerEmail: customerEmail,
+		EntitlementId: entitlementId,
+	})
+
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	return nil
+}
+
 // ConstructWebhookEvent validates and parses a webhook event
 func (c *CrosspayServerClient) ConstructWebhookEvent(
 	webhookPublicKey string,
