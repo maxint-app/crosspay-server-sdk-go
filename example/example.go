@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/maxint-app/crosspay-server-sdk-go"
+	"github.com/maxint-app/orca-server-sdk-go"
 )
 
 func main() {
-	// Create a new Crosspay server client
-	client, err := crosspay.NewCrosspayServerClient("your_api_key_here")
+	// Create a new Orca server client
+	client, err := orca.NewOrcaServerClient("your_api_key_here")
 	if err != nil {
 		log.Fatalf("Failed to create client: %v", err)
 	}
@@ -26,7 +26,7 @@ func main() {
 	}
 
 	// List entitlements for production environment
-	entitlements, err := client.ListEntitlements(ctx, crosspay.EnvironmentProduction)
+	entitlements, err := client.ListEntitlements(ctx, orca.EnvironmentProduction)
 	if err != nil {
 		log.Printf("Error listing entitlements: %v", err)
 	} else {
@@ -34,7 +34,7 @@ func main() {
 	}
 
 	// Get active entitlement for a customer
-	activeEntitlements, err := client.GetActiveEntitlements(ctx, "customer_email@example.com", crosspay.EnvironmentSandbox)
+	activeEntitlements, err := client.GetActiveEntitlements(ctx, "customer_email@example.com", orca.EnvironmentSandbox)
 	if err != nil {
 		log.Printf("Error getting active entitlement: %v", err)
 	} else {
@@ -42,7 +42,7 @@ func main() {
 	}
 
 	// Get active product for a customer
-	activeProducts, err := client.GetActiveProducts(ctx, "customer_email@example.com", crosspay.EnvironmentSandbox)
+	activeProducts, err := client.GetActiveProducts(ctx, "customer_email@example.com", orca.EnvironmentSandbox)
 	if err != nil {
 		log.Printf("Error getting active product: %v", err)
 	} else {
@@ -50,7 +50,7 @@ func main() {
 	}
 
 	// Get customer info
-	customerInfo, err := client.GetCustomerInfo(ctx, "customer_email@example.com", crosspay.EnvironmentSandbox)
+	customerInfo, err := client.GetCustomerInfo(ctx, "customer_email@example.com", orca.EnvironmentSandbox)
 	if err != nil {
 		log.Printf("Error getting customer info: %v", err)
 	} else {
