@@ -1,11 +1,11 @@
-# Crosspay Server SDK for Go
+# Orca Server SDK for Go
 
-A Go client library for the Crosspay API, providing easy access to subscription management, customer information, and webhook validation.
+A Go client library for the Orca API, providing easy access to subscription management, customer information, and webhook validation.
 
 ## Installation
 
 ```bash
-go get github.com/maxint-app/crosspay-server-sdk-go
+go get github.com/maxint-app/orca-server-sdk-go
 ```
 
 ## Usage
@@ -15,16 +15,16 @@ go get github.com/maxint-app/crosspay-server-sdk-go
 ```go
 import (
     "context"
-    crosspay "github.com/maxint-app/crosspay-server-sdk-go/src"
+    orca "github.com/maxint-app/orca-server-sdk-go"
 )
 
-client, err := crosspay.NewCrosspayServerClient("your_api_key_here")
+client, err := orca.NewOrcaServerClient("your_api_key_here")
 if err != nil {
     log.Fatal(err)
 }
 
 // Or with a custom base URL
-client, err := crosspay.NewCrosspayServerClient("your_api_key_here", "https://custom-api.example.com")
+client, err := orca.NewOrcaServerClient("your_api_key_here", "https://custom-api.example.com")
 ```
 
 ### List Products

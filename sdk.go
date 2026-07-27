@@ -1,4 +1,4 @@
-package crosspay
+package orca
 
 import (
 	"context"
@@ -20,8 +20,8 @@ func ptr[T any](v T) *T {
 	return &v
 }
 
-// CrosspayServerClient is a high-level client for the Crosspay API
-type CrosspayServerClient struct {
+// OrcaServerClient is a high-level client for the Orca API
+type OrcaServerClient struct {
 	client *Client
 	apiKey string
 }
@@ -35,9 +35,9 @@ const (
 	EnvironmentSandbox Environment = "sandbox"
 )
 
-// NewCrosspayServerClient creates a new Crosspay server client
-func NewCrosspayServerClient(apiKey string, baseURL ...string) (*CrosspayServerClient, error) {
-	url := "https://api.crosspay.dev"
+// NewOrcaServerClient creates a new Orca server client
+func NewOrcaServerClient(apiKey string, baseURL ...string) (*OrcaServerClient, error) {
+	url := "https://api.orca.maxint.com"
 	if len(baseURL) > 0 && baseURL[0] != "" {
 		url = baseURL[0]
 	}
@@ -50,14 +50,14 @@ func NewCrosspayServerClient(apiKey string, baseURL ...string) (*CrosspayServerC
 		return nil, err
 	}
 
-	return &CrosspayServerClient{
+	return &OrcaServerClient{
 		client: client,
 		apiKey: apiKey,
 	}, nil
 }
 
 // ListProducts retrieves all tenant products
-func (c *CrosspayServerClient) ListProducts(ctx context.Context) ([]TenantProduct, error) {
+func (c *OrcaServerClient) ListProducts(ctx context.Context) ([]TenantProduct, error) {
 	resp, err := c.client.GetTenantProducts(ctx, nil)
 	if err != nil {
 		return nil, err
@@ -90,7 +90,7 @@ func (c *CrosspayServerClient) ListProducts(ctx context.Context) ([]TenantProduc
 }
 
 // ListEntitlements retrieves all tenant entitlements for the specified environment
-func (c *CrosspayServerClient) ListEntitlements(ctx context.Context, environment Environment) ([]TenantEntitlement, error) {
+func (c *OrcaServerClient) ListEntitlements(ctx context.Context, environment Environment) ([]TenantEntitlement, error) {
 	resp, err := c.client.GetTenantEntitlementsByEnvironment(ctx, string(environment))
 	if err != nil {
 		return nil, err
@@ -123,7 +123,7 @@ func (c *CrosspayServerClient) ListEntitlements(ctx context.Context, environment
 }
 
 // GetActiveProduct retrieves the active product for a customer
-func (c *CrosspayServerClient) GetActiveProducts(ctx context.Context, customerEmail string, environment Environment) ([]TenantProduct, error) {
+func (c *OrcaServerClient) GetActiveProducts(ctx context.Context, customerEmail string, environment Environment) ([]TenantProduct, error) {
 	activeEntitlements, err := c.GetActiveEntitlements(ctx, customerEmail, environment)
 	if err != nil {
 		return nil, err
@@ -151,7 +151,7 @@ func (c *CrosspayServerClient) GetActiveProducts(ctx context.Context, customerEm
 }
 
 // GetActiveEntitlements retrieves the active entitlement for a customer
-func (c *CrosspayServerClient) GetActiveEntitlements(ctx context.Context, customerEmail string, environment Environment) ([]StorableEntitlement, error) {
+func (c *OrcaServerClient) GetActiveEntitlements(ctx context.Context, customerEmail string, environment Environment) ([]StorableEntitlement, error) {
 	body := TenantActiveEntitlementsInputBody{
 		CustomerEmail: customerEmail,
 		Environment:   ptr(string(environment)),
@@ -172,7 +172,7 @@ func (c *CrosspayServerClient) GetActiveEntitlements(ctx context.Context, custom
 }
 
 // ListCustomers retrieves a paginated list of customers
-func (c *CrosspayServerClient) ListCustomers(ctx context.Context, limit *int64, cursor *string) (*ListCustomerResponseBody, error) {
+func (c *OrcaServerClient) ListCustomers(ctx context.Context, limit *int64, cursor *string) (*ListCustomerResponseBody, error) {
 	params := &GetTenantServerCustomersParams{
 		Limit:  limit,
 		Cursor: cursor,
@@ -206,7 +206,7 @@ func (c *CrosspayServerClient) ListCustomers(ctx context.Context, limit *int64, 
 }
 
 // GetCustomerInfo retrieves extended customer information
-func (c *CrosspayServerClient) GetCustomerInfo(ctx context.Context, customerEmail string, environment Environment) (*CustomerEntitlements, error) {
+func (c *OrcaServerClient) GetCustomerInfo(ctx context.Context, customerEmail string, environment Environment) (*CustomerEntitlements, error) {
 	body := TenantServerGetCustomerInputBody{
 		CustomerEmail: customerEmail,
 		Environment:   ptr(string(environment)),
@@ -239,7 +239,7 @@ func (c *CrosspayServerClient) GetCustomerInfo(ctx context.Context, customerEmai
 	return result.Data, nil
 }
 
-func (c *CrosspayServerClient) CancelStripeSubscription(
+func (c *OrcaServerClient) CancelStripeSubscription(
 	ctx context.Context,
 	environment Environment,
 	entitlementId,
@@ -260,7 +260,7 @@ func (c *CrosspayServerClient) CancelStripeSubscription(
 	return nil
 }
 
-func (c *CrosspayServerClient) CancelGocardlessSubscription(
+func (c *OrcaServerClient) CancelGocardlessSubscription(
 	ctx context.Context,
 	environment Environment,
 	entitlementId,
@@ -282,7 +282,7 @@ func (c *CrosspayServerClient) CancelGocardlessSubscription(
 }
 
 // ConstructWebhookEvent validates and parses a webhook event
-func (c *CrosspayServerClient) ConstructWebhookEvent(
+func (c *OrcaServerClient) ConstructWebhookEvent(
 	webhookPublicKey string,
 	rawPayload []byte,
 	signatureHeader string,
